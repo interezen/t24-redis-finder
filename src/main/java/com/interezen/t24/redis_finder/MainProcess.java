@@ -94,8 +94,6 @@ public class MainProcess extends CoObject implements ILifeCycle {
 
 		StaticProperties.getInstance();
 		DynamicProperties.getInstance();
-		com.interezen.api.cfg.DynamicProperties.getInstance();
-		com.interezen.api.cfg.StaticProperties.getInstance();
 
 		ProcessDefine.REDIS_ID = StaticProperties.getInstance().getString("pool.redis.id", "redis-finder");
 
