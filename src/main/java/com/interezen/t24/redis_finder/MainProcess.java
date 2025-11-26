@@ -10,7 +10,6 @@ import com.interezen.t24.redis_finder.cfg.StaticProperties;
 import com.interezen.t24.redis_finder.define.ProcessDefine;
 import com.interezen.t24.redis_finder.logger.SysLogger;
 import com.interezen.t24.redis_finder.monitor.SysMonitor;
-import com.interezen.t24.redis_finder.pool.redis.RedisClusterPool;
 import com.interezen.t24.redis_finder.pool.redis.RedisPool;
 import com.interezen.t24.redis_finder.receiver.ReceiveServer;
 
@@ -97,16 +96,11 @@ public class MainProcess extends CoObject implements ILifeCycle {
 		DynamicProperties.getInstance();
 		com.interezen.api.cfg.DynamicProperties.getInstance();
 		com.interezen.api.cfg.StaticProperties.getInstance();
-		
-		ProcessDefine.PROC_IS_CLUSTED = StaticProperties.getInstance().getBoolean("common.cluster.mode", false);
-		
-		if(ProcessDefine.PROC_IS_CLUSTED) {
-			logger.info(" (*). Cluster mode...");
-			RedisClusterPool.getInstance();
-		} else {
-			logger.info(" (*). Single mode...");
-			RedisPool.getInstance();
-		}
+
+		ProcessDefine.REDIS_ID = StaticProperties.getInstance().getString("pool.redis.id", "redis-finder");
+
+		RedisPool.getInstance();
+
 		
 		logger.info(" => Module Resource Loaded.........");
 	}

@@ -11,7 +11,7 @@ import java.util.List;
  * Created by root on 2015-08-20.
  */
 public class DynamicProperties {
-    private static final String PROPERTIES_FILE_PATH = "dynamic.properties";
+    private static final String PROPERTIES_FILE_PATH = "config/dynamic.properties";
     private static final int PROPERTIES_REFRESH_DELAY = StaticProperties.getInstance().getInt("dynamic.delay", 10000);
     private static volatile DynamicProperties _instance = null;
     private PropertiesConfiguration configuration;

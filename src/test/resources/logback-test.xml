@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="10 seconds">
+    <!-- Appender List -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%yellow([%d{yyyy-MM-dd'T'HH:mm:ss.SSS}]) %highlight(%-5level) %cyan(%logger{2}) => %m%n</pattern>
+        </encoder>
+    </appender>
+    <root level="INFO" >
+        <appender-ref ref="console"/>
+    </root>
+    <!--<appender name="sys_file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>/Users/song-yunho/tmp/sys.log</File>
+        <encoder>
+            <pattern>[%d{yyyyMMddHHmmss}] %-5level %C => %m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/Users/song-yunho/tmp/sys.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <maxHistory>1</maxHistory>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
+    <logger name="io.lettuce" level="INFO">
+        <appender-ref ref="console"/>
+    </logger>-->
+    <!--<logger name="io.lettuce" level="DEBUG">
+        <appender-ref ref="console"/>
+    </logger>-->
+</configuration>

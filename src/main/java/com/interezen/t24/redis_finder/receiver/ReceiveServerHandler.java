@@ -19,18 +19,29 @@ import ch.qos.logback.classic.Logger;
 import com.google.gson.Gson;
 import com.interezen.other.T24Utils;
 import com.interezen.t24.redis_finder.cfg.DynamicProperties;
+import com.interezen.t24.redis_finder.cfg.StaticProperties;
 import com.interezen.t24.redis_finder.define.ProcessDefine;
 import com.interezen.t24.redis_finder.logger.ReceiveLogger;
 import com.interezen.t24.redis_finder.monitor.CacheCommon;
-import com.interezen.t24.redis_finder.pool.redis.RedisClusterPool;
 import com.interezen.t24.redis_finder.pool.redis.RedisPool;
 import com.interezen.t24.redis_finder.utils.PacketUtils;
+import io.lettuce.core.RedisFuture;
+import io.lettuce.core.api.StatefulConnection;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.async.RedisAsyncCommands;
+import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
+import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
+import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.ragdoll.express.pool.lettuce.instance.ExpressLettucePool;
+import org.ragdoll.express.pool.lettuce.object.ExpressLettucePoolObject;
+import org.ragdoll.express.pool.lettuce.object.ExpressLettuceSyncMode;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 
@@ -323,18 +334,35 @@ public class ReceiveServerHandler extends ChannelInboundHandlerAdapter {
 		logger.debug("{} => {}", ctx.channel(), "personalBasisFieldValue : " + personalBasisFieldValue);
 		logger.debug("{} => {}", ctx.channel(), "personalTargetFieldValue : " + personalTargetFieldValue);
 		logger.debug("{} => {}", ctx.channel(), "redisKey : " + redisKey);
-		
+
+		ExpressLettucePoolObject lettucePoolObject = ExpressLettucePool.getInstance().get(ProcessDefine.REDIS_ID);
+
+		StatefulRedisConnection<String, String> connection = null;
+		StatefulRedisClusterConnection<String, String> connectionCluster = null;
+
+		long redisCommandDuration = 0L;
+		long totalDuration = 0L;
+
 		try {
-			if (ProcessDefine.PROC_IS_CLUSTED) {
-				jedisCluster = RedisClusterPool.getInstance().getClusterResource();
-				result = jedisCluster.hget(redisKey, resultFieldKey);
-			} else {
-				jedis = RedisPool.getInstance().getResource();
-				result = jedis.hget(redisKey, resultFieldKey);
+			RedisCommands<String, String> commands;
+			RedisAdvancedClusterCommands<String, String> commandsCluster;
+			StatefulConnection<String,String> statefulConnection = lettucePoolObject.borrow(ExpressLettuceSyncMode.SYNC, 500);
+
+			if (statefulConnection instanceof StatefulRedisClusterConnection) {
+				connectionCluster = (StatefulRedisClusterConnection<String, String>) statefulConnection;
+				commandsCluster = connectionCluster.sync();
+
+				result = commandsCluster.hget(redisKey, resultFieldKey);
+			} else if (statefulConnection instanceof StatefulRedisConnection) {
+				connection = (StatefulRedisConnection<String, String>) statefulConnection;
+				commands = connection.sync();
+
+				result = commands.hget(redisKey, resultFieldKey);
 			}
-			
-			if(result == null)
+
+			if (StringUtils.isEmpty(result)) {
 				result = "0";
+			}
 		} catch (Exception e) {
 			logger.error("{} => {}", ctx.channel(), T24Utils.getStackTrace(e));
 			logger.error("{} => {}", ctx.channel(), "Redis select failed...");
@@ -342,15 +370,14 @@ public class ReceiveServerHandler extends ChannelInboundHandlerAdapter {
 			if(printTimeUse) {
 				printTime(ctx, "personal", start);
 			}
-			
+
 			return redisException;
 		} finally {
-			if (jedis != null) {
-				try {
-					jedis.close();
-				} catch (Exception e) {
-					logger.error("{} => {}", ctx.channel(), T24Utils.getStackTrace(e));
-				}
+			if (connection != null) {
+				lettucePoolObject.release(ExpressLettuceSyncMode.SYNC, connection);
+			}
+			if (connectionCluster != null) {
+				lettucePoolObject.release(ExpressLettuceSyncMode.SYNC, connectionCluster);
 			}
 		}
 

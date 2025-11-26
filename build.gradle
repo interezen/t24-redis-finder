@@ -73,12 +73,14 @@ repositories {
 
 dependencies {
     implementation 'redis.clients:jedis:2.9.0'
-    implementation 'io.netty:netty-all:4.1.9.Final'
+    implementation 'io.netty:netty-all:4.1.125.Final'
     implementation 'com.interezen:t24-utils:0.0.4-SNAPSHOT'
     implementation 'ch.qos.logback:logback-classic:1.2.1'
     implementation 'com.google.guava:guava:21.0'
     implementation 'commons-configuration:commons-configuration:1.10'
     implementation 'com.interezen:t24-api:0.1.7-SNAPSHOT'
+    implementation group: 'org.ragdoll', name: 'express-configuration', version: "1.0.13-RELEASE"
+    implementation group: 'org.ragdoll', name: 'express-pool-lettuce', version: '1.2.21-RELEASE'
 
     testImplementation group: 'junit', name: 'junit', version: "${junit_ver}"
     testImplementation (group: 'org.ragdoll', name: 'express-gradle-helper', version: "${build_helper_ver}"){

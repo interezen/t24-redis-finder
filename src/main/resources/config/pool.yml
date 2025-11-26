@@ -1,0 +1,14 @@
+#################################################
+# REDIS CONFIGURATION
+#################################################
+redis:
+  - id: "redis-finder"
+    use: true
+    type: "single"
+    uri: ["127.0.0.1"]
+    timeout: 1000
+    command_timeout: 500
+    topology_interval: 60000
+    half_mode: "sync"
+    auth: ""
+    workers: 0

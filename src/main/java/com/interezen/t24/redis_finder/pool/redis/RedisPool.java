@@ -1,16 +1,25 @@
 package com.interezen.t24.redis_finder.pool.redis;
 
 import ch.qos.logback.classic.Logger;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.interezen.other.T24Utils;
 import com.interezen.t24.redis_finder.cfg.StaticProperties;
+import com.interezen.t24.redis_finder.define.ProcessDefine;
 import com.interezen.t24.redis_finder.logger.RedisLogger;
+import org.apache.commons.lang3.StringUtils;
+import org.ragdoll.express.configuration.ExpressConfigurationUtils;
+import org.ragdoll.express.pool.lettuce.instance.ExpressLettucePool;
+import org.ragdoll.express.pool.lettuce.object.ExpressLettucePoolObject;
+import org.ragdoll.express.utils.ExpressExceptionUtils;
+import org.ragdoll.express.utils.ExpressJsonUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisPool {
 	private volatile static RedisPool _instance = null;
-    private String objectName = "RedisPool";
-    private JedisPool pool = null;
 	private Logger logger = RedisLogger.getInstance().getLogger();
 
 	public static RedisPool getInstance() {
@@ -38,41 +47,63 @@ public class RedisPool {
 	}
 
 	private void initRedis() {
-
-		String redisHost = StaticProperties.getInstance().getString("redis.host", "127.0.0.1");
-		int redisPort  = StaticProperties.getInstance().getInt("redis.port", 17000);
-
-		if(redisPort == 0) {
-			logger.error("{}, Redis Port Required -> StaticProperties[redis.port]", objectName);
-			return;
+		// lettuce init 하게
+		try {
+			String poolPath = StaticProperties.getInstance().getString("pool.configuration.path", "config/pool.yml");
+			JsonObject root = null;
+			try {
+				root = ExpressConfigurationUtils.loadYamlToJsonElement(poolPath).getAsJsonObject();
+			} catch (Exception e) {
+				logger.error("{} => {}", this.getClass().getName(), T24Utils.getStackTrace(e));
+			}
+			if (root == null) {
+				logger.error(" * pool resource element is empty");
+				System.exit(1);
+			} else {
+				JsonArray redisRoot = root.getAsJsonArray("redis");
+				if (redisRoot == null) {
+					logger.error("redis configuration is empty.");
+					System.exit(1);
+				}
+				boolean completed = false;
+				int size = redisRoot.size();
+				JsonObject row;
+				for (int i = 0; i < size; i++) {
+					row = redisRoot.get(i).getAsJsonObject();
+					if (!row.has("id")) {
+						continue;
+					}
+					String id = row.get("id").getAsString();
+					if (StringUtils.isEmpty(id)) {
+						continue;
+					}
+					if (!ProcessDefine.REDIS_ID.equals(id)) {
+						continue;
+					}
+					if (ExpressLettucePool.getInstance().containsKey(id)) {
+						continue;
+					}
+					boolean use = row.has("use") && row.get("use").getAsBoolean();
+					if (!use) {
+						continue;
+					}
+					int workers = ExpressJsonUtils.getAsInt(row, "workers", 0);
+					if(workers <= 0) {
+						workers = Math.max(1, Runtime.getRuntime().availableProcessors() * 3);
+						row.addProperty("workers", workers);
+					}
+					try {
+						ExpressLettucePoolObject lettucePoolObject = new ExpressLettucePoolObject(row);
+						ExpressLettucePool.getInstance().put(id, lettucePoolObject);
+						logger.info("lettuce info\n" + lettucePoolObject);
+					} catch (Exception e) {
+						logger.error(" * pool configuration redis init exception : {}", ExpressExceptionUtils.getStackTrace(e));
+					}
+				}
+			}
+		} catch (Exception e) {
+			logger.error(" * pool configuration exception : {}", ExpressExceptionUtils.getStackTrace(e));
+			System.exit(1);
 		}
-
-		int redisTimeout = StaticProperties.getInstance().getInt("redis.connection.timeout", 3000);
-		int redisConnectionCount = StaticProperties.getInstance().getInt("redis.connection.count", 16);
-		String redisPassword = StaticProperties.getInstance().getString("redis.password", "inter501");
-
-		JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
-		jedisPoolConfig.setMaxTotal(redisConnectionCount);
-		jedisPoolConfig.setMinIdle(redisConnectionCount/2);
-		jedisPoolConfig.setMaxIdle(redisConnectionCount);
-		pool = new JedisPool(jedisPoolConfig, redisHost, redisPort, redisTimeout, redisPassword);
-
-		logger.info("");
-		logger.info("{}, ================ [RedisPool Information] ================", objectName);
-		logger.info("{}, 0. Redis Type : Single", objectName);
-		logger.info("{}, 1. Redis Host : {}", objectName, redisHost);
-		logger.info("{}, 2. Redis Port : {}", objectName, redisPort);
-		logger.info("{}, 3. Redis Timeout : {}", objectName, redisTimeout);
-		logger.info("{}, 4. Redis Password : {}", objectName, redisPassword);
-		logger.info("{}, 5. Redis ConnectionCount : {}", objectName, redisConnectionCount);
-		logger.info("{}, ============================================================", objectName);
-	}
-
-	public Jedis getResource() {
-		return pool != null ? pool.getResource() : null ;
-	}
-
-	public int getActiveCount() {
-		return pool != null ? pool.getNumActive() : 0;
 	}
 }

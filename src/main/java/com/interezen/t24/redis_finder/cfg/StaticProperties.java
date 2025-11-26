@@ -17,7 +17,7 @@ import java.util.jar.Manifest;
  * Created by root on 2015-08-20.
  */
 public class StaticProperties {
-    private static final String PROPERTIES_FILE_PATH = "static.properties";
+    private static final String PROPERTIES_FILE_PATH = "config/static.properties";
     private static volatile StaticProperties _instance = null;
     private PropertiesConfiguration configuration;
     private Logger logger = SysLogger.getInstance().getLogger();
