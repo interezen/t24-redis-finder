@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- For assistance related to logback-translator or configuration  -->
+<!-- files in general, please contact the logback user mailing list -->
+<!-- at http://www.qos.ch/mailman/listinfo/logback-user             -->
+<!--                                                                -->
+<!-- For professional support please see                            -->
+<!--    http://www.qos.ch/shop/products/professionalSupport         -->
+<!--                                                                -->
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <property name="LOG_DIR" value="./logs" />
+    <property name="LOG_HISTORY" value="7" />
+
+    <!-- Appender List -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%d{HH:mm:ss.SSS}],%m%n</pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="sys-file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_DIR}/sys.log</File>
+        <encoder>
+            <pattern>[%d{yyyyMMddHHmmss.SSS}],%m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/sys.log.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxHistory>${LOG_HISTORY}</maxHistory>
+            <maxFileSize>500MB</maxFileSize>
+        </rollingPolicy>
+    </appender>
+    
+    <appender name="memory-file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_DIR}/memory.log</File>
+        <encoder>
+            <pattern>[%d{yyyyMMddHHmmss.SSS}],%m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/memory.log.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxHistory>${LOG_HISTORY}</maxHistory>
+            <maxFileSize>500MB</maxFileSize>
+        </rollingPolicy>
+    </appender>
+    
+    <appender name="rcv-file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_DIR}/rcv.log</File>
+        <encoder>
+            <pattern>[%d{yyyyMMddHHmmss.SSS}],%m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/rcv.log.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxHistory>${LOG_HISTORY}</maxHistory>
+            <maxFileSize>500MB</maxFileSize>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="api-file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_DIR}/api.log</File>
+        <encoder>
+            <pattern>[%d{yyyyMMddHHmmss.SSS}],%m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/api.log.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxHistory>${LOG_HISTORY}</maxHistory>
+            <maxFileSize>500MB</maxFileSize>
+        </rollingPolicy>
+    </appender>
+
+    <logger name="com.interezen.api" level="INFO">
+        <appender-ref ref="api-file"/>
+    </logger>
+
+    <!-- Logger List -->
+    <logger name="com.interezen.t24.action.manager.logger.SysLogger" level="INFO">
+        <appender-ref ref="sys-file"/>
+    </logger>
+
+    <logger name="com.interezen.t24.action.manager.logger.RedisLogger" level="INFO">
+        <appender-ref ref="sys-file"/>
+    </logger>
+
+    <!-- Memory Logger -->
+    <logger name="com.interezen.t24.action.manager.logger.MemoryLogger" level="INFO">
+        <appender-ref ref="memory-file"/>
+    </logger>
+
+    <!-- Receive Logger -->
+    <logger name="com.interezen.t24.action.manager.logger.ReceiveLogger" level="INFO">
+        <appender-ref ref="rcv-file" />
+    </logger>
+
+    <logger name="io.netty.util" level="INFO">
+        <appender-ref ref="rcv-file"/>
+    </logger>
+
+    <root level="OFF" />
+</configuration>
