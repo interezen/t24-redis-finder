@@ -36,7 +36,7 @@ ext {
 }
 
 group = 'com.interezen'
-version = '1.0-SNAPSHOT'
+version = '2.0.0'
 description = 't24-redis-finder'
 
 apply plugin: 'java'
@@ -106,7 +106,7 @@ jar {
                 "Implementation-Built-By": "Gradle ${gradle.gradleVersion} " + new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
                 "Implementation-Build-Jdk": "${System.getProperty('java.version')} (${System.getProperty('java.vendor')} ${System.getProperty('java.vm.version')})",
                 "Implementation-Build-OS": "${System.getProperty('os.name')} ${System.getProperty('os.arch')} ${System.getProperty('os.version')}",
-                "Main-Class": "com.interezen.dfinder.asset.MainProcess",
+                "Main-Class": "com.interezen.t24.redis_finder.MainProcess",
                 "Class-Path": ". " + project.configurations.implementation.collect { "lib/$it.name" }.join(' ')
     }
 }
