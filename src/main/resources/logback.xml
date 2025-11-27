@@ -11,13 +11,6 @@
 
     <property name="LOG_DIR" value="./logs" />
     <property name="LOG_HISTORY" value="7" />
-
-    <!-- Appender List -->
-    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>[%d{HH:mm:ss.SSS}],%m%n</pattern>
-        </encoder>
-    </appender>
     
     <appender name="sys-file" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>${LOG_DIR}/sys.log</File>
@@ -72,27 +65,25 @@
     </logger>
 
     <!-- Logger List -->
-    <logger name="com.interezen.t24.action.manager.logger.SysLogger" level="INFO">
+    <logger name="com.interezen.t24.redis_finder.logger.SysLogger" level="INFO">
         <appender-ref ref="sys-file"/>
     </logger>
 
-    <logger name="com.interezen.t24.action.manager.logger.RedisLogger" level="INFO">
+    <logger name="com.interezen.t24.redis_finder.logger.RedisLogger" level="INFO">
         <appender-ref ref="sys-file"/>
     </logger>
 
     <!-- Memory Logger -->
-    <logger name="com.interezen.t24.action.manager.logger.MemoryLogger" level="INFO">
+    <logger name="com.interezen.t24.redis_finder.logger.MemoryLogger" level="INFO">
         <appender-ref ref="memory-file"/>
     </logger>
 
     <!-- Receive Logger -->
-    <logger name="com.interezen.t24.action.manager.logger.ReceiveLogger" level="INFO">
+    <logger name="com.interezen.t24.redis_finder.logger.ReceiveLogger" level="INFO">
         <appender-ref ref="rcv-file" />
     </logger>
 
     <logger name="io.netty.util" level="INFO">
         <appender-ref ref="rcv-file"/>
     </logger>
-
-    <root level="OFF" />
 </configuration>

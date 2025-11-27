@@ -5,7 +5,7 @@ redis:
   - id: "redis-finder"
     use: true
     type: "single"
-    uri: ["127.0.0.1"]
+    uri: ["127.0.0.1:3002"]
     timeout: 1000
     command_timeout: 500
     topology_interval: 60000
