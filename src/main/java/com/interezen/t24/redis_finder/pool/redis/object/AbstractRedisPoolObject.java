@@ -1,9 +1,9 @@
 package com.interezen.t24.redis_finder.pool.redis.object;
 
 import ch.qos.logback.classic.Logger;
-import com.interezen.other.T24Utils;
 import com.interezen.t24.redis_finder.logger.RedisLogger;
 import org.apache.commons.lang3.StringUtils;
+import org.ragdoll.express.utils.ExpressExceptionUtils;
 import redis.clients.jedis.*;
 
 import java.time.LocalDate;
@@ -227,7 +227,7 @@ public abstract class AbstractRedisPoolObject {
                 this.redisConnectionObject.cleaningUp();
             }
         } catch(Exception e) {
-            logger.error("{} => " + T24Utils.getStackTrace(e));
+            logger.error("{} => " + ExpressExceptionUtils.getStackTrace(e));
         } finally {
             jedisCluster = null;
         }
@@ -244,7 +244,7 @@ public abstract class AbstractRedisPoolObject {
             success = true;
         } catch(Exception e) {
             success = false;
-            logger.error("{} => redis cluster exception : {}", instanceName, T24Utils.getStackTrace(e));
+            logger.error("{} => redis cluster exception : {}", instanceName, ExpressExceptionUtils.getStackTrace(e));
         }
         
         if(!success) {
@@ -266,7 +266,7 @@ public abstract class AbstractRedisPoolObject {
             success = true;
         } catch(Exception e) {
             success = false;
-            logger.error("{} => redis exception : {}", instanceName, T24Utils.getStackTrace(e));
+            logger.error("{} => redis exception : {}", instanceName, ExpressExceptionUtils.getStackTrace(e));
         } finally {
             if( null != connection ) {
                 connection.close();
@@ -330,7 +330,7 @@ public abstract class AbstractRedisPoolObject {
                 jedis.close();
             }
         } catch (Exception e) {
-            logger.error("{} => {}", instanceName, T24Utils.getStackTrace(e));
+            logger.error("{} => {}", instanceName, ExpressExceptionUtils.getStackTrace(e));
             jedis = null;
         }
     }
@@ -340,7 +340,7 @@ public abstract class AbstractRedisPoolObject {
             try {
                 jedis.close();
             } catch (Exception e) {
-                logger.error("{} => {}", instanceName, T24Utils.getStackTrace(e));
+                logger.error("{} => {}", instanceName, ExpressExceptionUtils.getStackTrace(e));
             } finally {
                 jedis = null;
             }
@@ -354,7 +354,7 @@ public abstract class AbstractRedisPoolObject {
             try {
                 closeCluster();
             } catch(Exception e) {
-                logger.error("{} => " + T24Utils.getStackTrace(e));
+                logger.error("{} => " + ExpressExceptionUtils.getStackTrace(e));
             }
         }
         

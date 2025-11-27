@@ -44,8 +44,8 @@ apply plugin: 'java-library-distribution'
 apply plugin: 'maven-publish'
 apply plugin: 'idea'
 apply plugin: 'application'
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 [configurations.default]*.exclude(module: 'commons-logging')
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
@@ -72,11 +72,9 @@ repositories {
 }
 
 dependencies {
-    implementation 'redis.clients:jedis:2.9.0'
-    implementation 'io.netty:netty-all:4.1.125.Final'
-    implementation 'com.interezen:t24-utils:0.0.4-SNAPSHOT'
-    implementation 'ch.qos.logback:logback-classic:1.2.1'
-    implementation 'com.google.guava:guava:21.0'
+    implementation 'io.netty:netty-all:4.1.128.Final'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.5.21'
+    implementation 'com.google.guava:guava:32.1.3-jre'
     implementation 'commons-configuration:commons-configuration:1.10'
     implementation 'com.interezen:t24-api:0.1.7-SNAPSHOT'
     implementation group: 'org.ragdoll', name: 'express-configuration', version: "1.0.13-RELEASE"

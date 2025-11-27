@@ -2,9 +2,7 @@ package com.interezen.t24.redis_finder.pool.redis;
 
 import ch.qos.logback.classic.Logger;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.interezen.other.T24Utils;
 import com.interezen.t24.redis_finder.cfg.StaticProperties;
 import com.interezen.t24.redis_finder.define.ProcessDefine;
 import com.interezen.t24.redis_finder.logger.RedisLogger;
@@ -14,9 +12,6 @@ import org.ragdoll.express.pool.lettuce.instance.ExpressLettucePool;
 import org.ragdoll.express.pool.lettuce.object.ExpressLettucePoolObject;
 import org.ragdoll.express.utils.ExpressExceptionUtils;
 import org.ragdoll.express.utils.ExpressJsonUtils;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisPool {
 	private volatile static RedisPool _instance = null;
@@ -54,7 +49,7 @@ public class RedisPool {
 			try {
 				root = ExpressConfigurationUtils.loadYamlToJsonElement(poolPath).getAsJsonObject();
 			} catch (Exception e) {
-				logger.error("{} => {}", this.getClass().getName(), T24Utils.getStackTrace(e));
+				logger.error("{} => {}", this.getClass().getName(), ExpressExceptionUtils.getStackTrace(e));
 			}
 			if (root == null) {
 				logger.error(" * pool resource element is empty");

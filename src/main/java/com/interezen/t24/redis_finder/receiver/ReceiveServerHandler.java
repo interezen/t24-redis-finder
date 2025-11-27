@@ -17,21 +17,15 @@ package com.interezen.t24.redis_finder.receiver;
 
 import ch.qos.logback.classic.Logger;
 import com.google.gson.Gson;
-import com.interezen.other.T24Utils;
 import com.interezen.t24.redis_finder.cfg.DynamicProperties;
-import com.interezen.t24.redis_finder.cfg.StaticProperties;
 import com.interezen.t24.redis_finder.define.ProcessDefine;
 import com.interezen.t24.redis_finder.logger.ReceiveLogger;
 import com.interezen.t24.redis_finder.monitor.CacheCommon;
-import com.interezen.t24.redis_finder.pool.redis.RedisPool;
 import com.interezen.t24.redis_finder.utils.PacketUtils;
-import io.lettuce.core.RedisFuture;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
-import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
 import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -42,6 +36,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.ragdoll.express.pool.lettuce.instance.ExpressLettucePool;
 import org.ragdoll.express.pool.lettuce.object.ExpressLettucePoolObject;
 import org.ragdoll.express.pool.lettuce.object.ExpressLettuceSyncMode;
+import org.ragdoll.express.utils.ExpressExceptionUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 
@@ -276,7 +271,7 @@ public class ReceiveServerHandler extends ChannelInboundHandlerAdapter {
 			logger.debug("{} => {}", ctx.channel(), "fieldDelimiter : " + fieldDelimiter);
 			parsedData = PacketUtils.kv(data, fieldDelimiter, keyValueDelimiter);
 		} catch (Exception e) {
-			logger.error("{} => {}", ctx.channel(), T24Utils.getStackTrace(e));
+			logger.error("{} => {}", ctx.channel(), ExpressExceptionUtils.getStackTrace(e));
 			parsedData = null;
 		}
 
@@ -364,7 +359,7 @@ public class ReceiveServerHandler extends ChannelInboundHandlerAdapter {
 				result = "0";
 			}
 		} catch (Exception e) {
-			logger.error("{} => {}", ctx.channel(), T24Utils.getStackTrace(e));
+			logger.error("{} => {}", ctx.channel(), ExpressExceptionUtils.getStackTrace(e));
 			logger.error("{} => {}", ctx.channel(), "Redis select failed...");
 
 			if(printTimeUse) {

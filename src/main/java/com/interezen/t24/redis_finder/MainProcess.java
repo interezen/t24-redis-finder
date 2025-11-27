@@ -4,7 +4,6 @@ import ch.qos.logback.classic.Logger;
 import com.interezen.api.cojlib.CoObject;
 import com.interezen.api.cojlib.CoThread;
 import com.interezen.api.cojlib.ILifeCycle;
-import com.interezen.other.T24Utils;
 import com.interezen.t24.redis_finder.cfg.DynamicProperties;
 import com.interezen.t24.redis_finder.cfg.StaticProperties;
 import com.interezen.t24.redis_finder.define.ProcessDefine;
@@ -12,6 +11,7 @@ import com.interezen.t24.redis_finder.logger.SysLogger;
 import com.interezen.t24.redis_finder.monitor.SysMonitor;
 import com.interezen.t24.redis_finder.pool.redis.RedisPool;
 import com.interezen.t24.redis_finder.receiver.ReceiveServer;
+import org.ragdoll.express.utils.ExpressExceptionUtils;
 
 import java.util.Enumeration;
 import java.util.Properties;
@@ -118,7 +118,7 @@ public class MainProcess extends CoObject implements ILifeCycle {
 				bLoop = false;
 				System.exit(0);
 			} catch (Exception e) {
-				logger.error("{} => {}", getName(), T24Utils.getStackTrace(e));
+				logger.error("{} => {}", getName(), ExpressExceptionUtils.getStackTrace(e));
 			}
 			sleep(DynamicProperties.getInstance().getInt("memory.sleep.time", 5000));
 		}

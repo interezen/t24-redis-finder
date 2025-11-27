@@ -1,7 +1,5 @@
 package com.interezen.t24.redis_finder.utils;
 
-import com.google.gson.Gson;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 

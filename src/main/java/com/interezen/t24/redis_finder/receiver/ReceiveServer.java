@@ -19,7 +19,6 @@ import ch.qos.logback.classic.Logger;
 import com.interezen.api.cojlib.CoObject;
 import com.interezen.api.cojlib.CoThread;
 import com.interezen.api.cojlib.ILifeCycle;
-import com.interezen.other.T24Utils;
 import com.interezen.t24.redis_finder.cfg.StaticProperties;
 import com.interezen.t24.redis_finder.logger.ReceiveLogger;
 import io.netty.bootstrap.ServerBootstrap;
@@ -28,6 +27,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.ragdoll.express.utils.ExpressExceptionUtils;
 
 public class ReceiveServer extends CoObject implements ILifeCycle {
 
@@ -71,7 +71,7 @@ public class ReceiveServer extends CoObject implements ILifeCycle {
 			try {
 				runLogic();
 			} catch(Exception e) {
-				logger.error("{} => {}", getName(), T24Utils.getStackTrace(e));
+				logger.error("{} => {}", getName(), ExpressExceptionUtils.getStackTrace(e));
 			}
 			sleep(5000);
 		}
