@@ -1,0 +1,10 @@
+# IntelliJ project files
+.idea
+*.iml
+out
+gen
+
+**/api_dynamic.properties
+**/api_static.properties
+**/db.properties
+**/static.properties

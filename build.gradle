@@ -1,0 +1,272 @@
+import org.ragdoll.express.gradle.helper.GradleHelperScpTask
+import org.ragdoll.express.gradle.helper.GradleHelperTarTask
+
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.text.SimpleDateFormat
+
+buildscript {
+    repositories {
+        maven {
+            url 'https://gitlab.com/api/v4/projects/32100466/packages/maven'
+            credentials(HttpHeaderCredentials) {
+                name 'Deploy-Token'
+                value 'KnAroe6ZjAEzTsyTjoZM'
+            }
+            authentication {
+                //noinspection GroovyAssignabilityCheck
+                header(HttpHeaderAuthentication)
+            }
+        }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.ragdoll:express-gradle-helper:1.5.8'
+    }
+}
+
+ext {
+    // build helper
+    build_helper_ver = "1.5.8"
+    junit_ver = "4.13.2"
+    lombok_ver = "1.18.22"
+
+    // nexus
+    nexus_url = project.property("nexusUrl")
+}
+
+group = 'com.interezen'
+version = '2.0.0'
+description = 't24-redis-finder'
+
+apply plugin: 'java'
+apply plugin: 'java-library-distribution'
+apply plugin: 'maven-publish'
+apply plugin: 'idea'
+apply plugin: 'application'
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+[configurations.default]*.exclude(module: 'commons-logging')
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
+project.configurations.implementation.setCanBeResolved(true)
+project.configurations.api.setCanBeResolved(true)
+
+repositories {
+    maven {
+        url project.property("gitlabUrl")
+        credentials {
+            username(String.valueOf(project.property("gitlabTokenName")))
+            password(String.valueOf(project.property("gitlabTokenValue")))
+        }
+    }
+    maven {
+        url "${nexus_url}/content/repositories/public/"
+        allowInsecureProtocol = true
+    }
+    mavenCentral()
+    maven {
+        url "https://plugins.gradle.org/m2/"
+        allowInsecureProtocol = true
+    }
+}
+
+dependencies {
+    implementation 'io.netty:netty-all:4.1.128.Final'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.5.21'
+    implementation 'com.google.guava:guava:32.1.3-jre'
+    implementation 'commons-configuration:commons-configuration:1.10'
+    implementation 'com.interezen:t24-api:0.1.7-SNAPSHOT'
+    implementation group: 'org.ragdoll', name: 'express-configuration', version: "1.0.13-RELEASE"
+    implementation group: 'org.ragdoll', name: 'express-pool-lettuce', version: '1.2.21-RELEASE'
+
+    testImplementation group: 'junit', name: 'junit', version: "${junit_ver}"
+    testImplementation (group: 'org.ragdoll', name: 'express-gradle-helper', version: "${build_helper_ver}"){
+        exclude group: 'org.apache.commons', module: 'commons-compress'
+        exclude group: 'org.apache.commons', module: 'commons-io'
+    }
+}
+
+clean {
+    doFirst {
+        delete("${projectDir}/build", "${projectDir}/out")
+    }
+}
+
+jar {
+    include("*.class*")
+    include("**/*.class*")
+    archiveName("${project.name}-${project.version}.jar")
+    //noinspection GroovyAssignabilityCheck
+    manifest {
+        //noinspection UnnecessaryQualifiedReference
+        attributes "Implementation-Title": "${project.name}",
+                "Implementation-Version": "${project.version}",
+                "Implementation-Created-By": "INTEREZEN Inc.",
+                "Implementation-Built-By": "Gradle ${gradle.gradleVersion} " + new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
+                "Implementation-Build-Jdk": "${System.getProperty('java.version')} (${System.getProperty('java.vendor')} ${System.getProperty('java.vm.version')})",
+                "Implementation-Build-OS": "${System.getProperty('os.name')} ${System.getProperty('os.arch')} ${System.getProperty('os.version')}",
+                "Main-Class": "com.interezen.t24.redis_finder.MainProcess",
+                "Class-Path": ". " + project.configurations.implementation.collect { "lib/$it.name" }.join(' ')
+    }
+}
+
+
+task copyToLib(type: Copy) {
+    into "$buildDir/output/lib"
+    from project.configurations.implementation
+}
+
+
+task allPackage(dependsOn: [clean, jar, copyToLib]) {
+    group("build")
+    description("aaa")
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss")
+    var now = dateFormat.format(new Date())
+    doLast {
+
+        // target directory
+        File temp1 = file("${projectDir}/archive/${version}")
+        if (!temp1.exists()) {
+            temp1.mkdir()
+        }
+        File temp2 = file("${projectDir}/archive/${version}/${now}")
+        if (!temp2.exists()) {
+            temp2.mkdir()
+        }
+        File temp3 = file("${projectDir}/archive/${version}/${now}-docker")
+        if (!temp3.exists()) {
+            temp3.mkdir()
+        }
+
+        // target directory
+        File targetTemporaryDirectory = file("${projectDir}/archive/${version}/${now}/${project.name}")
+        if (!targetTemporaryDirectory.exists()) {
+            targetTemporaryDirectory.mkdir()
+        }
+        File targetTemporaryDirectoryDocker = file("${projectDir}/archive/${version}/${now}-docker/${project.name}")
+        if (!targetTemporaryDirectoryDocker.exists()) {
+            targetTemporaryDirectoryDocker.mkdir()
+        }
+
+        // jar file copy
+        File jarBinary = file("${projectDir}/build/libs/${project.name}-${version}.jar")
+        if (!jarBinary.exists()) {
+            println("jar build binary is not exist")
+            return
+        }
+
+        copy {
+            from jarBinary.getPath()
+            into targetTemporaryDirectory.getPath()
+            exclude("debug/**", "**-test**")
+        }
+        File destJarBinaryVs = file(targetTemporaryDirectory.getPath() + "/${project.name}-${version}.jar")
+        destJarBinaryVs.renameTo(file(targetTemporaryDirectory.getPath() + "/${project.name}.jar"))
+        copy {
+            from "${projectDir}/build/resources/main"
+            into targetTemporaryDirectory.getPath()
+            exclude("debug/**", "**-test**")
+        }
+        copy {
+            from "${projectDir}/build/output/lib"
+            into targetTemporaryDirectory.getPath() + "/lib"
+        }
+        File scriptFile = file("${projectDir}/script/run.sh")
+        if (scriptFile.exists()) {
+            scriptFile.setExecutable(true)
+        }
+        copy {
+            from "${projectDir}/script/run.sh"
+            into targetTemporaryDirectory.getPath()
+        }
+
+        File restartScriptFile = file("${projectDir}/script/restart.sh")
+        if (restartScriptFile.exists()) {
+            restartScriptFile.setExecutable(true)
+        }
+        copy {
+            from "${projectDir}/script/restart.sh"
+            into targetTemporaryDirectory.getPath()
+        }
+
+        copy {
+            from "${projectDir}/archive/${version}/${now}/${project.name}"
+            into "${projectDir}/archive/${version}/${now}-docker/${project.name}"
+            // symbolic 걸려있는 대상을 기입
+            exclude("**/static.properties", "**/pool.yml", "**/api_*")
+        }
+
+        // ------------------------------------------------------------------------------------------------
+        // [ Symbolic Docker Type 처리 ]
+        // ------------------------------------------------------------------------------------------------
+        String workDirNormalTypeRoot = "${projectDir}/archive/${version}/${now}"
+        String workDirDockerTypeRoot = "${projectDir}/archive/${version}/${now}-docker"
+
+        // Symbolic Link File List 기입
+        Files.createSymbolicLink(Paths.get("${workDirDockerTypeRoot}/${project.name}/config/static.properties"), Paths.get("../../config/symbolic/asset/static.properties"))
+        Files.createSymbolicLink(Paths.get("${workDirDockerTypeRoot}/${project.name}/config/pool.yml"), Paths.get("../../common/pool.yml"))
+        Files.createSymbolicLink(Paths.get("${workDirDockerTypeRoot}/${project.name}/api_static.properties"), Paths.get("../common/api_static.properties"))
+        Files.createSymbolicLink(Paths.get("${workDirDockerTypeRoot}/${project.name}/api_dynamic.properties"), Paths.get("../common/api_dynamic.properties"))
+        Files.createSymbolicLink(Paths.get("${workDirDockerTypeRoot}/${project.name}/logs"), Paths.get("/data/asset/logs"))
+
+        String binaryNameNormal = "${project.name}-${version}.tar.gz"
+        String binaryNameDocker = "${project.name}-${version}-docker.tar.gz"
+
+        String copyBinaryNormal = "${workDirNormalTypeRoot}/${binaryNameNormal}"
+        String copyBinaryDocker = "${workDirDockerTypeRoot}/${binaryNameDocker}"
+
+        GradleHelperTarTask.tarCommandArchive(workDirNormalTypeRoot, binaryNameNormal, "${project.name}")
+        GradleHelperTarTask.tarCommandArchive(workDirDockerTypeRoot, binaryNameDocker, "${project.name}")
+
+        copy {
+            from copyBinaryNormal
+            into "${rootDir}/archive/release/${version}"
+        }
+        copy {
+            from copyBinaryDocker
+            into "${rootDir}/archive/release/${version}"
+        }
+    }
+}
+
+
+task allPackageOnlyFileServer {
+    group("build")
+    description("upload file server only")
+    doLast {
+        String binaryName = "${rootDir}/archive/release/${version}/${project.name}-${version}.tar.gz"
+        String binaryNameDocker = "${rootDir}/archive/release/${version}/${project.name}-${version}-docker.tar.gz"
+        println(" * upload target file is : ${binaryName} and ${binaryNameDocker}")
+        String uploadDirectory = project.property("publicDir") + "/${project.name}"
+        GradleHelperScpTask.upload(
+                String.valueOf(project.property("publicHost")),
+                Integer.parseInt(project.property("publicPort")),
+                String.valueOf(project.property("publicUser")),
+                String.valueOf(project.property("publicPassword")),
+                uploadDirectory,
+                binaryName)
+        GradleHelperScpTask.upload(
+                String.valueOf(project.property("publicHost")),
+                Integer.parseInt(project.property("publicPort")),
+                String.valueOf(project.property("publicUser")),
+                String.valueOf(project.property("publicPassword")),
+                uploadDirectory,
+                binaryNameDocker)
+    }
+}
+
+task allPackageWithFileServer(dependsOn: [allPackage, allPackageOnlyFileServer]) {
+    group("build")
+    description("allPackage->upload fileserver")
+}
+
+distTar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+distZip {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+installDist {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
