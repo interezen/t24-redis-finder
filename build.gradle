@@ -25,6 +25,23 @@ buildscript {
     }
 }
 
+plugins {
+    id("org.cyclonedx.bom") version "1.8.0"
+}
+
+cyclonedxBom {
+    includeConfigs = ["runtimeClasspath"]
+    skipConfigs = ["compileClasspath", "testCompileClasspath"]
+    projectType = "application"
+    schemaVersion = "1.6"
+    destination = file("build/reports")
+    outputName = "sbom"
+    outputFormat = "json" // "xml", "json", "all" 가능
+    includeBomSerialNumber = true
+    includeLicenseText = true
+    componentVersion = "2.0.0"
+}
+
 ext {
     // build helper
     build_helper_ver = "1.5.8"
@@ -76,7 +93,12 @@ dependencies {
     implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.5.21'
     implementation 'com.google.guava:guava:32.1.3-jre'
     implementation 'commons-configuration:commons-configuration:1.10'
-    implementation 'com.interezen:t24-api:0.1.7-SNAPSHOT'
+    implementation (group:'com.interezen', name: 't24-api', version: '0.1.7-SNAPSHOT') {
+        exclude group: 'io.netty'
+        exclude group: 'org.elasticsearch'
+        exclude group: 'org.apache.kafka'
+        exclude group: 'org.apache.poi'
+    }
     implementation group: 'org.ragdoll', name: 'express-configuration', version: "1.0.13-RELEASE"
     implementation group: 'org.ragdoll', name: 'express-pool-lettuce', version: '1.2.21-RELEASE'
 
